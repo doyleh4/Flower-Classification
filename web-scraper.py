@@ -39,8 +39,6 @@ def fetch_urls(name, driver):
         thumbnail_results = driver.find_elements_by_css_selector("img.Q4LuWd")
         number_results = len(thumbnail_results)
 
-        print(f"Found: {number_results} search results. Extracting links from {results_start}:{number_results}")
-        
         for e in thumbnail_results:
             # click every thumbnail such that we can get the real image behind it
             try:
@@ -55,7 +53,7 @@ def fetch_urls(name, driver):
                     big_img = element[1].find_element_by_class_name('n3VNCb')
 
                 #if image url will work with  requests append url to urls
-                if big_img.get_attribute('src') and 'http' in big_img.get_attribute('src'):
+                if big_img.get_attribute('src') and 'http' in big_img.get_attribute('src') :
                     urls.append(big_img.get_attribute("src"))
                     image_count+=1
                     print("Images obtained: "+ str(image_count))
@@ -66,7 +64,6 @@ def fetch_urls(name, driver):
                 print(e)    
         #scroll to following page    
         scroll_to_end(driver)
-        print("Urls found for " + str(NUM_IMAGES) + "images.")
     return urls
 
 def download_urls(name, urls):

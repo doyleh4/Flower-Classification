@@ -12,3 +12,6 @@ Run python script
 
 If this does not work:
 Download appropriate google chrome driver for your chrome version @ https://chromedriver.storage.googleapis.com/index.html and replace the chromedriver.exe in this file
+
+Note:
+If program stalls on image downlaod try change the search term (i.e. it was stalling on Lily, so i changed the term to lily-flower)
