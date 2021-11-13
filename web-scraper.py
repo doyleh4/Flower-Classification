@@ -10,7 +10,7 @@ import requests
 from PIL import Image
 from io import BytesIO
 
-NUM_IMAGES = 200
+NUM_IMAGES = 550       # allow extra images for when dimensions are not met
 SLEEP_BETWEEN_INTERACTIONS = 0.2 #allow sufficent time for div tree to be opened
 MIN_WIDTH = 500
 MIN_HEIGHT = 500
@@ -53,10 +53,12 @@ def fetch_urls(name, driver):
                     big_img = element[0].find_element_by_class_name('n3VNCb')
                 else:
                     big_img = element[1].find_element_by_class_name('n3VNCb')
-            
+
+                #if image url will work with  requests append url to urls
                 if big_img.get_attribute('src') and 'http' in big_img.get_attribute('src'):
                     urls.append(big_img.get_attribute("src"))
                     image_count+=1
+                    print("Images obtained: "+ str(image_count))
                     if image_count == NUM_IMAGES:
                         return urls
                 
@@ -86,19 +88,21 @@ def download_urls(name, urls):
     for url in urls:
         image = requests.get(url).content
 
-        #open image before downloading
-        temp = Image.open(BytesIO(image))
-        width, height = temp.size
-
-        #if size firs requirements
-        if width >= MIN_WIDTH and height >= MIN_HEIGHT:
-            print("downloading: " + url)
-            f = open(str(counter)+".jpg", 'wb')
-            f.write(image)
-            f.close()
-        else:
-            print("Image url: " + url + " does not fit constarints")
-        counter+=1
+        try:   #try and open the image with PIL
+            #open image before downloading
+            temp = Image.open(BytesIO(image))
+            width, height = temp.size
+            #if size fits requirements
+            if width >= MIN_WIDTH and height >= MIN_HEIGHT:
+                print("downloading: " + url)
+                f = open(str(counter)+".jpg", 'wb')
+                f.write(image)
+                f.close()
+            else:
+                print("Image url: " + url + " does not fit constarints")
+            counter+=1
+        except Exception:
+            print("image url : " + url + "could not be opened, did not download")
 
 if __name__ == '__main__':
     if platform.system() == "Windows":
