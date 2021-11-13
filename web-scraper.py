@@ -6,10 +6,14 @@ import time
 from selenium import webdriver
 import os.path
 from os import path
-import requests
+import requests 
+from PIL import Image
+from io import BytesIO
 
-NUM_IMAGES = 10
-SLEEP_BETWEEN_INTERACTIONS = 0
+NUM_IMAGES = 200
+SLEEP_BETWEEN_INTERACTIONS = 0.2 #allow sufficent time for div tree to be opened
+MIN_WIDTH = 500
+MIN_HEIGHT = 500
 
 def fetch_urls(name, driver):
     def scroll_to_end(driver):
@@ -23,6 +27,7 @@ def fetch_urls(name, driver):
     #build the query search string
     search_url = "https://www.google.com/search?safe=off&site=&tbm=isch&source=hp&q={q}&oq={q}&gs_l=img"
 
+    #open broswer to query
     driver.get(search_url.format(q=name))
      
 
@@ -35,22 +40,29 @@ def fetch_urls(name, driver):
         number_results = len(thumbnail_results)
 
         print(f"Found: {number_results} search results. Extracting links from {results_start}:{number_results}")
-
-        for img in thumbnail_results:
+        
+        for e in thumbnail_results:
             # click every thumbnail such that we can get the real image behind it
             try:
-                img.click()
-                
-                #Extract image url (only downloadable images)
-                if img.get_attribute('src') and 'http' in img.get_attribute('src'):
-                    urls.append(img.get_attribute('src'))
-                    image_count+=1
-                    if image_count == NUM_IMAGES-1:
-                        return urls
+                e.click()
                 
                 time.sleep(SLEEP_BETWEEN_INTERACTIONS)
-            except Exception:
-                continue        
+                element = driver.find_elements_by_class_name('v4dQwb')
+                # Google image web site logic
+                if image_count == 0:
+                    big_img = element[0].find_element_by_class_name('n3VNCb')
+                else:
+                    big_img = element[1].find_element_by_class_name('n3VNCb')
+            
+                if big_img.get_attribute('src') and 'http' in big_img.get_attribute('src'):
+                    urls.append(big_img.get_attribute("src"))
+                    image_count+=1
+                    if image_count == NUM_IMAGES:
+                        return urls
+                
+            except Exception as e:
+                print(e)    
+        #scroll to following page    
         scroll_to_end(driver)
         print("Urls found for " + str(NUM_IMAGES) + "images.")
     return urls
@@ -64,15 +76,28 @@ def download_urls(name, urls):
     if path.exists("sample-images/" + name) == False:
         print("Folder not found, creating one in sample-images")
         os.mkdir("sample-images/" + name)
-        os.chdir("sample-images/" + name)
+
+    
+    #set working directory (where our images will be saved to)
+    os.chdir("sample-images/" + name)
     
     counter = 0
-    #Download images
+    #Download images to directory
     for url in urls:
         image = requests.get(url).content
-        f = open(str(counter)+".jpg", 'wb')
-        f.write(image)
-        f.close()
+
+        #open image before downloading
+        temp = Image.open(BytesIO(image))
+        width, height = temp.size
+
+        #if size firs requirements
+        if width >= MIN_WIDTH and height >= MIN_HEIGHT:
+            print("downloading: " + url)
+            f = open(str(counter)+".jpg", 'wb')
+            f.write(image)
+            f.close()
+        else:
+            print("Image url: " + url + " does not fit constarints")
         counter+=1
 
 if __name__ == '__main__':
