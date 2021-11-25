@@ -8,12 +8,13 @@ import os.path
 from os import path
 import requests 
 from PIL import Image
+from PIL import ImageChops
 from io import BytesIO
 
-NUM_IMAGES = 550       # allow extra images for when dimensions are not met
+NUM_IMAGES = 3000       # allow extra images for when dimensions are not met
 SLEEP_BETWEEN_INTERACTIONS = 0.2 #allow sufficent time for div tree to be opened
-MIN_WIDTH = 500
-MIN_HEIGHT = 500
+MIN_WIDTH = 300
+MIN_HEIGHT = 300
 
 def fetch_urls(name, driver):
     def scroll_to_end(driver):
@@ -84,22 +85,52 @@ def download_urls(name, urls):
     #Download images to directory
     for url in urls:
         image = requests.get(url).content
-
+        print("Next image")
         try:   #try and open the image with PIL
             #open image before downloading
             temp = Image.open(BytesIO(image))
             width, height = temp.size
+            temp.close()
             #if size fits requirements
             if width >= MIN_WIDTH and height >= MIN_HEIGHT:
                 print("downloading: " + url)
-                f = open(str(counter)+".jpg", 'wb')
-                f.write(image)
+                try:
+                    f = open(str(counter)+".jpg", 'wb')
+                    f.write(image)
+                except Exception:
+                    print("failed to download")
+                    f.close()
+                    continue
                 f.close()
             else:
                 print("Image url: " + url + " does not fit constarints")
+                continue
             counter+=1
         except Exception:
             print("image url : " + url + "could not be opened, did not download")
+            f.close()
+def delete_duplicates():
+    os.chdir("sample-images")
+    for folder in os.listdir(os.getcwd()):
+        os.chdir(folder)
+        print("Num items in " + folder + " folder: " + str(len(os.listdir(os.getcwd()))))
+        for image_name in os.listdir(os.getcwd()):
+            #Not efficient atall
+            image = Image.open(image_name)
+            for temp_name in os.listdir(os.getcwd()):
+                if temp_name == image_name:
+                    continue
+                temp = Image.open(temp_name)
+                diff = ImageChops.difference(image.convert("RGB"), temp.convert("RGB"))
+                if diff.getbbox() is None:
+                    print("deleting image")
+                    os.remove(image_name)
+                    break
+            print("Current folder: " + folder + " checking next image: " + image_name)
+        print("checking next folder")  
+        print("duplicates deleted ")
+        print("Num remainng items: " + str(len(os.listdir(os.getcwd()))))
+        os.chdir("..") #go back to parent directory
 
 if __name__ == '__main__':
     if platform.system() == "Windows":
@@ -109,6 +140,7 @@ if __name__ == '__main__':
         urls = fetch_urls(sys.argv[1], webdriver)
         webdriver.close()
         download_urls(sys.argv[1], urls)
+        #delete_duplicates()
     else:
         print("Error running webscraper, please use a Windows machine")
 
