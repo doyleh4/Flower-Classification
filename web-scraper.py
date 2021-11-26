@@ -116,6 +116,7 @@ def delete_duplicates():
         print("Num items in " + folder + " folder: " + str(len(os.listdir(os.getcwd()))))
         for image_name in os.listdir(os.getcwd()):
             #Not efficient atall
+            print("Current folder: " + folder + " checking next image: " + image_name)
             image = Image.open(image_name)
             for temp_name in os.listdir(os.getcwd()):
                 if temp_name == image_name:
@@ -123,10 +124,12 @@ def delete_duplicates():
                 temp = Image.open(temp_name)
                 diff = ImageChops.difference(image.convert("RGB"), temp.convert("RGB"))
                 if diff.getbbox() is None:
-                    print("deleting image")
+                    print("deleting image: " + image_name)
+                    print("it is the same as : " + temp_name) 
+                    image.close()
                     os.remove(image_name)
                     break
-            print("Current folder: " + folder + " checking next image: " + image_name)
+            
         print("checking next folder")  
         print("duplicates deleted ")
         print("Num remainng items: " + str(len(os.listdir(os.getcwd()))))
@@ -135,12 +138,13 @@ def delete_duplicates():
 if __name__ == '__main__':
     if platform.system() == "Windows":
         print("Running webscraper for Windows")
-        
-        webdriver = webdriver.Chrome()
-        urls = fetch_urls(sys.argv[1], webdriver)
-        webdriver.close()
-        download_urls(sys.argv[1], urls)
-        #delete_duplicates()
+        if sys.argv[1].upper() == "DELETE-DUPLICATES":
+            delete_duplicates()
+        else:
+            webdriver = webdriver.Chrome()
+            urls = fetch_urls(sys.argv[1], webdriver)
+            webdriver.close()
+            download_urls(sys.argv[1], urls)
     else:
         print("Error running webscraper, please use a Windows machine")
 

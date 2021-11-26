@@ -9,6 +9,8 @@ Install pip dependendencies
 Run python script
   1) python web-scraper.py {flower name}
   The program will take in the given arguement of flower name (e.g. orchid) and will create a folder in sample-images with that name and save the defined number of pictures into the folder
+  2) python web-scraper delete-duplicates
+  The program will delete all duplicate images in the folders in sample images. This is done by checking every single image so willt ake a while to run
 
 If this does not work:
 Download appropriate google chrome driver for your chrome version @ https://chromedriver.storage.googleapis.com/index.html and replace the chromedriver.exe in this file
