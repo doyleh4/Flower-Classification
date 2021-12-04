@@ -6,15 +6,17 @@ import time
 from selenium import webdriver
 import os.path
 from os import path
+import os
 import requests 
 from PIL import Image
 from PIL import ImageChops
 from io import BytesIO
+import hashlib
 
-NUM_IMAGES = 3000       # allow extra images for when dimensions are not met
-SLEEP_BETWEEN_INTERACTIONS = 0.2 #allow sufficent time for div tree to be opened
-MIN_WIDTH = 300
-MIN_HEIGHT = 300
+NUM_IMAGES = 5000       # allow extra images for when dimensions are not met
+SLEEP_BETWEEN_INTERACTIONS = 0.3 #allow sufficent time for div tree to be opened
+MIN_WIDTH = 64
+MIN_HEIGHT = 64
 
 def fetch_urls(name, driver):
     def scroll_to_end(driver):
@@ -109,31 +111,57 @@ def download_urls(name, urls):
         except Exception:
             print("image url : " + url + "could not be opened, did not download")
             f.close()
+
+#def file_hash(filename):
+#    with open(filename, 'rb') as f:
+#        return hashlib.md5(f.read()).hexidigest()
+
+
 def delete_duplicates():
     os.chdir("sample-images")
+    #for folder in os.listdir(os.getcwd()):
+    #    os.chdir(folder)
+    #    print("Num items in " + folder + " folder: " + str(len(os.listdir(os.getcwd()))))
+    #    for image_name in os.listdir(os.getcwd()):
+    #        #Not efficient atall
+    #        print("Current folder: " + folder + " checking next image: " + image_name)
+    #        image = Image.open(image_name)
+    #        for temp_name in os.listdir(os.getcwd()):
+    #            if temp_name == image_name:
+    #                continue
+    #            temp = Image.open(temp_name)
+    #            diff = ImageChops.difference(image.convert("RGB"), temp.convert("RGB"))
+    #            if diff.getbbox() is None:
+    #                print("deleting image: " + image_name)
+    #                print("it is the same as : " + temp_name) 
+    #                image.close()
+    #                os.remove(image_name)
+    #                break
+    #        
+    #    print("checking next folder")  
+    #    print("duplicates deleted ")
+    #    print("Num remainng items: " + str(len(os.listdir(os.getcwd()))))
+    #    os.chdir("..") #go back to parent directory
     for folder in os.listdir(os.getcwd()):
         os.chdir(folder)
         print("Num items in " + folder + " folder: " + str(len(os.listdir(os.getcwd()))))
-        for image_name in os.listdir(os.getcwd()):
-            #Not efficient atall
-            print("Current folder: " + folder + " checking next image: " + image_name)
-            image = Image.open(image_name)
-            for temp_name in os.listdir(os.getcwd()):
-                if temp_name == image_name:
-                    continue
-                temp = Image.open(temp_name)
-                diff = ImageChops.difference(image.convert("RGB"), temp.convert("RGB"))
-                if diff.getbbox() is None:
-                    print("deleting image: " + image_name)
-                    print("it is the same as : " + temp_name) 
-                    image.close()
-                    os.remove(image_name)
-                    break
-            
-        print("checking next folder")  
-        print("duplicates deleted ")
-        print("Num remainng items: " + str(len(os.listdir(os.getcwd()))))
-        os.chdir("..") #go back to parent directory
+        
+        files_list = os.listdir('.')
+        duplicates = []
+        hash_keys = dict()
+        for index, filename in enumerate(os.listdir('.')):
+            with open(filename, 'rb') as f:
+                filehash = hashlib.md5(f.read()).hexdigest()
+            if filehash not in hash_keys:
+                hash_keys[filehash]=index
+            else:
+                duplicates.append((index, hash_keys[filehash]))
+            print("hashed file: " + filename)
+        print("Duplicates are")
+        print(duplicates)
+        for index in duplicates:
+            os.remove(files_list[index[0]])
+
 
 if __name__ == '__main__':
     if platform.system() == "Windows":
