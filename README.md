@@ -17,3 +17,16 @@ Download appropriate google chrome driver for your chrome version @ https://chro
 
 Note:
 If program stalls on image downlaod try change the search term (i.e. it was stalling on Lily, so i changed the term to lily-flower)
+
+# Run KNN
+Install dependencies 
+  1) pip install scikit-learn
+  2) pip install opencv-python
+  3) python knn.py
+
+# Run CNN
+Install dependencies 
+  1) pip install scikit-learn
+  2) pip install opencv-python
+  3) pip install tensorflow
+  4) python model.py
