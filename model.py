@@ -86,7 +86,7 @@ def load_images():
                     #     images.append(image_data_small)
                     #     labels.append([4])
                 except:
-                    print('I fucked up.')
+                    print('Something went wrong')
 
     return images, labels
 
