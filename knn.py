@@ -3,9 +3,10 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.model_selection import train_test_split, KFold
-from sklearn.metrics import f1_score, confusion_matrix
+from sklearn.metrics import f1_score, confusion_matrix, precision_score, recall_score
 from sklearn.neighbors import KNeighborsClassifier
 import cv2 as cv
+import random
 
 input_shape = 256
 images = []
@@ -53,12 +54,20 @@ for folder in directory:
                 #     y.append([4])
             except:
                 print('Didint work')
-X = np.array(images)
-y = np.array(labels)
+
+temp = list(zip(images, labels))
+random.seed(12345)  # Ensure data is shuffled the same way every time
+random.shuffle(temp)
+images_shuffled, labels_shuffled = zip(*temp)
+
+X = np.array(images_shuffled)
+y = np.array(labels_shuffled)
 
 
 def knn_research(X, y):
-    n_range = [1, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+    n_range = [1, 3, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50]
+
+    
 
     X = np.reshape(X, (X.shape[0], -1))
     y = y.ravel()
@@ -66,6 +75,7 @@ def knn_research(X, y):
     mean_error = []
     std_error = []
     for n in n_range:
+        print("Training KNN for n-neighbors: " + str(n))
         model = KNeighborsClassifier(n_neighbors=n, weights="uniform")
         temp = []
         kf = KFold(n_splits=5)
@@ -73,7 +83,11 @@ def knn_research(X, y):
             model.fit(X[train], y[train])
             y_pred = model.predict(X[test])
             temp.append(f1_score(y[test], y_pred))
-        print(max(temp))
+        print("Model accuracy: ", model.score(X[test], y[test]))
+        print("Model F1 score: ", f1_score(y[test], y_pred))
+        print("Model precision: ", precision_score(y[test], y_pred))
+        print("Model recall: ", recall_score(y[test], y_pred))
+        #print(np.average(temp))
         print(confusion_matrix(y[test], y_pred))
         mean_error.append(np.array(temp).mean())
         std_error.append(np.array(temp).std())
@@ -85,6 +99,7 @@ def knn_research(X, y):
 
 
 def knn():
+    print("Training best found model")
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
     # Reshape the image data into rows
@@ -96,9 +111,13 @@ def knn():
     print("y_train: " + str(y_train.shape))
     print("y_test: " + str(y_test.shape))
 
-    model = KNeighborsClassifier(n_neighbors=15, weights="uniform")
+    model = KNeighborsClassifier(n_neighbors=1, weights="uniform")
     model.fit(X_train, y_train)
     y_pred = model.predict(X_test)
+    print("Model accuracy: ", model.score(X_test, y_test))
+    print("Model F1 score: " , f1_score(y_test.ravel(), y_pred))
+    print("Model precision: ", precision_score(y_test.ravel(), y_pred))
+    print("Model recall: ", recall_score(y_test.ravel(), y_pred))
     tn, fp, fn, tp = confusion_matrix(y_test, y_pred).ravel()
     print(tn, fp, fn, tp)
     fig = plt.figure(figsize=(1, 1))
